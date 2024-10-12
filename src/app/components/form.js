@@ -4,16 +4,20 @@ import React from 'react';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import colombia from "../colombia.json";
+import md5 from 'md5';
+import { useRouter } from 'next/navigation';
 
 export default function Form() {
+    const router = useRouter();
+
     const getInitialValues = () => ({
-        name: undefined,
-        lastname: undefined,
-        document: undefined,
-        department: undefined,
-        city: undefined,
-        cellphone: undefined,
-        email: undefined, 
+        name: "",
+        lastname: "",
+        document: "",
+        department: "",
+        city: "",
+        cellphone: "",
+        email: "", 
         accept: false 
     });
 
@@ -28,12 +32,16 @@ export default function Form() {
                 city: Yup.string().required("Campo Obligatorio"),
                 cellphone: Yup.number()
                 .required("Campo Obligatorio")
+                .test('valid-start', 'El número debe comenzar con 3', (value) => {
+                    const firstDigit = value.toString()[0];
+                    return firstDigit === '3';
+                  })
                 .test('valid-length', 'El número debe tener 10 dígitos', (value) => {
                     let char = value ? value.toString() : '';
                     return value ? char.length === 10 : false; 
                   }),
                 email: Yup.string().email("Debes ingresar un email valido").required("Campo Obligatorio"),
-                accept: Yup.boolean().oneOf([true], 'Debes aceptar los términos y condiciones'),   
+                accept: Yup.boolean().oneOf([true], 'Debes aceptar el tratamiento de datos personales'),   
              })
       
          );
@@ -50,7 +58,10 @@ export default function Form() {
         validationSchema = {getValidationSchema()}
 
         onSubmit = {(values, errors) => {
-          alert(JSON.stringify(values, null, 2));
+            
+            const code = md5(values.document);
+            localStorage.setItem('codeGenerated', code);
+            router.push(`/concurso/${code}`);
         }}
         >
         {({ handleSubmit, handleChange, values, errors, touched, handleBlur, setFieldValue }) => (
@@ -211,7 +222,7 @@ export default function Form() {
                     
                     
                 />
-                <p>Autorizo el tratamiento de mis datos de acuerdo con la finalidad establecida en la <span className='text-[#2062e7] cursor-pointer underline'>política de protección de datos personales</span></p>
+                <p>Autorizo el tratamiento de mis datos de acuerdo con la finalidad establecida en la <a href='/datos_personales' target='_blank' className='text-[#2062e7] cursor-pointer underline'>política de protección de datos personales</a></p>
             </div>
             {errors.accept && touched.accept ? (
                 <div className='mt-2 text-red-600'>{errors.accept}</div>
