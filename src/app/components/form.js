@@ -59,7 +59,7 @@ export default function Form() {
 
         onSubmit = {(values, errors) => {
             
-            const code = md5(values.document);
+            const code = md5(values.document).substring(0,15);
             localStorage.setItem('codeGenerated', code);
             router.push(`/concurso/${code}`);
         }}
